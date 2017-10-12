@@ -1,0 +1,19 @@
+<html>
+<head>
+    <title>Albums</title>
+</head>
+<body>
+    <form method="post" action="add album">
+        <label>Add Album</label></br>
+        <label for="name">Album Name: </label>
+        <input type="text" name="name">
+        <input type="submit" value="New Album">
+    </form>
+    {% if album %}
+    <h2>Albums:</h2>
+        {% for album in albumList %}
+            <li><a href='path to album'>{album stuff}</a></li>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>
