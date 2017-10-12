@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>Album Name : {{ name }}</title>
+</head>
+<body>
+    {% if photos %}
+    <h2>Photos in {{ name }}</h2>
+        <ul>
+            {% for photo in photoList %}
+                <li><img src='data:image/png;base64, {{photo.image}}'/>
+                    <p>Caption : {{ photo.caption }}</p>
+                    <p>Tags : {{ photo.tags }}</p>
+                    <p>Likes : {{ photo.likes }}</p>
+                </li>
+                <form method="post" action="like">
+                    <input type="submit" value="like"/>
+                    <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
+                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
+                </form>
+                <form method="post" action="delete">
+                    <input type="submit" value="delete"/>
+                    <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
+                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
+                </form>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>
