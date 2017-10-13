@@ -2,31 +2,7 @@
 <head>
     <title>Friends!</title>
 </head>
-<body>
-    <form method="post" action="{{ url_for('searchFriends') }}">
-        <label for="name">Name: </label>
-        <input type="text" name="friend_name"/><br/>
-        <input type="submit" value="Search"/>
-    </form>
-    
-    <table style="width:80%">
-    {% if friends %}
-            {%for friend in friends %}
-                <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                </tr>
-                <tr>
-                    <td>{{ friend.first_name }}</td>
-                    <td>{{ friend.last_name }}</td>
-                    <form method="post" action="{{ url_for('addFriend') }}">
-                        <td><input type="submit" value="Add"/></td>
-                        <input type="hidden" name="uid" value="{{ friend.userid }}"/>
-                    </form>
-                </tr>
-            {% endfor %}
-    {% endif %}
-    </table>
+<body>   
     <table style="width:80%">
         {% if userFriends %}
             <h3>Friend List:</h3>
@@ -38,6 +14,33 @@
                 <tr>
                     <td>{{ friend.first_name }}</td>
                     <td>{{ friend.last_name }}</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+    
+    <form method="post" action="{{ url_for('searchFriends') }}">
+        <label for="name">Name: </label>
+        <input type="text" name="name"/><br/>
+        <input type="submit" value="Search"/>
+    </form>
+    
+    <table style="width:80%">
+        {% if friends %}
+            {%for friend in friends %}
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>E-Mail</th>
+                </tr>
+                <tr>
+                    <td>{{ friend.first_name }}</td>
+                    <td>{{ friend.last_name }}</td>
+                    <td>{{ friend.email }}</td>
+                    <form method="post" action="{{ url_for('addFriend') }}">
+                        <td><input type="submit" value="Add"/></td>
+                        <input type="hidden" name="uid" value="{{ friend.userid }}"/>
+                    </form>
                 </tr>
             {% endfor %}
         {% endif %}
