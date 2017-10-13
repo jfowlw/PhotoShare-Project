@@ -12,7 +12,7 @@
 import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
-import flask.ext.login as flask_login
+import flask_login as flask_login
 
 # for image uploading
 # from werkzeug import secure_filename
@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 # These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = '123456'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'JSbass02'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -134,6 +134,9 @@ def register_user():
     try:
         email = request.form.get('email')
         password = request.form.get('password')
+        #first_name = request.form.get('first name')
+        #last_name = request.form.get('last name')
+        #dob = request.form.get('date of birth')
     except:
         print(
             "couldn't find all tokens")  # this prints to shell, end users will not see this (all print statements go to shell)
@@ -142,6 +145,7 @@ def register_user():
     test = isEmailUnique(email)
     if test:
         print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
+        #print(cursor.execute("INSERT INTO Users (email, password, first_name, last_name,dob) VALUES ('{0}', '{1}')".format(email, password)))
         conn.commit()
         # log user in
         user = User()
@@ -157,7 +161,6 @@ def getUsersPhotos(uid):
     cursor = conn.cursor()
     cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
     return cursor.fetchall()  # NOTE list of tuples, [(imgdata, pid), ...]
-
 
 def getUserIdFromEmail(email):
     cursor = conn.cursor()
@@ -184,7 +187,7 @@ def protected():
 
 
 # begin photo uploading code
-# photos uploaded using base64 encoding so they can be directly embeded in HTML 
+# photos uploaded using base64 encoding so they can be directly embedded in HTML
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 
@@ -199,12 +202,13 @@ def upload_file():
         uid = getUserIdFromEmail(flask_login.current_user.id)
         imgfile = request.files['photo']
         caption = request.form.get('caption')
-        print(caption)
         photo_data = base64.standard_b64encode(imgfile.read())
+        print(str(photo_data))
+        print(str(uid))
+        print(str(caption))
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO Pictures (imgdata, user_id, caption) VALUES ('{0}', '{1}', '{2}' )".format(photo_data, uid,
-                                                                                                    caption))
+        #cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption) VALUES ('{0}', '{1}', '{2}' )".format(photo_data, uid, caption))
+        cursor.execute("INSERT INTO Pictures (user_id, caption) VALUES ('{0}', '{1}')".format(uid, caption))
         conn.commit()
         return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!',
                                photos=getUsersPhotos(uid))
@@ -215,6 +219,80 @@ def upload_file():
 
 # end photo uploading code
 
+#### begin new code
+
+# photo viewing code
+def delete_file(pid):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Pictures WHERE picture_id = '{0}'".format(pid))
+    conn.commit()
+
+def getAllPhotos():
+    cursor = conn.cursor()
+    cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
+    return cursor.fetchall()
+
+def getAllPhotosByTag(tagword):
+    cursor = conn.cursor()
+    cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(tagword))
+    return cursor.fetchall()
+
+def getUsersPhotosByTag(tagword, uid):
+    cursor = conn.cursor()
+    cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', P.user_id = '{1}' ,A.picture_id = P.picture_id".format(tagword,uid))
+    return cursor.fetchall()
+
+def photoSearch(searchString):
+    words = searchString.split()
+    results =[]
+    finalOutput = []
+    for word in words:
+        cursor = conn.cursor()
+        cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(word))
+        results+=[list(cursor.fetchall())]
+    for photo in results[0]:
+        if inAllLists(photo,results):
+            finalOutput+=photo
+    return finalOutput
+
+def inAllLists(element,lists):
+    for list in lists:
+        if element not in list:
+            return False
+    return True
+
+def mostPopularTags():
+    cursor = conn.cursor()
+    cursor.execute("SELECT word FROM associated_with GROUP BY word ORDER BY COUNT(word)")
+    return cursor.fetchall()
+
+#album code
+def createAlbum(name,uid):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Album (name, user_id,date_of_creation) VALUES ('{0}','{1}',NOW())".format(name,uid))
+    conn.commit()
+def deleteAlbum(aid):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Album WHERE album_id = '{0}'".format(aid))
+    conn.commit()
+
+# friend code
+def userSearchByName(fname,lname):
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id, first_name, last_name, email FROM Users WHERE first_name = '{0}', last_name = '{1}'".format(fname,lname))
+    return cursor.fetchall()
+
+def addFriend(uid1,uid2):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(uid1,uid2))
+    conn.commit()
+
+def listFriends(uid):
+    cursor = conn.cursor()
+    cursor.execute("SELECT U.first_name, U.last_name FROM Friends AS F, Users as U WHERE F.user_id1 = '{0}', F.user_id2 = U.user_id".format(uid))
+    return cursor.fetchall()
+
+#### end new code
 
 # default page
 @app.route("/", methods=['GET'])
