@@ -1,4 +1,3 @@
-<html>
 <head>
     <title>Friends!</title>
 </head>
@@ -12,8 +11,8 @@
             </tr>
             {% for friend in userFriends %}
                 <tr>
-                    <td>{{ friend.first_name }}</td>
-                    <td>{{ friend.last_name }}</td>
+                    <td>{{ friend.0 }}</td>
+                    <td>{{ friend.1 }}</td>
                 </tr>
             {% endfor %}
         {% endif %}
@@ -34,12 +33,12 @@
                     <th>E-Mail</th>
                 </tr>
                 <tr>
-                    <td>{{ friend.first_name }}</td>
-                    <td>{{ friend.last_name }}</td>
-                    <td>{{ friend.email }}</td>
+                    <td>{{ friend.0 }}</td>
+                    <td>{{ friend.1 }}</td>
+                    <td>{{ friend.2 }}</td>
                     <form method="post" action="{{ url_for('addFriend') }}">
                         <td><input type="submit" value="Add"/></td>
-                        <input type="hidden" name="uid" value="{{ friend.userid }}"/>
+                        <input type="hidden" name="uid" value="{{ friend.3 }}"/>
                     </form>
                 </tr>
             {% endfor %}
