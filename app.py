@@ -216,12 +216,66 @@ def upload_file():
     else:
         return render_template('upload.html')
 
+def listAllFriends():
+    cursor = conn.cursor()
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    cursor.execute(
+        "SELECT U.first_name,U.last_name,U.email, U.user_id FROM Users AS U, Friends AS F WHERE U.user_id = F.user_id2 AND F.user_id1 = '{0}'".format(
+            uid))
+    usersfriends = cursor.fetchall()
+    return usersfriends
 
+@app.route('/friends')
+def friends():
+    usersfriends = listAllFriends()
+    print(usersfriends)
+    return render_template('friends.html',userFriends= usersfriends)
+@app.route('/findfriends', methods=['GET', 'POST'])
+def searchFriends():
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    name = request.form.get('name')
+    names = name.split()
+    print(str(uid))
+    print(str(names))
+    cursor = conn.cursor()
+    if len(names) == 1:
+        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name = '{0}'".format(names[0]))
+        A = list(cursor.fetchall())
+        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name = '{0}'".format(names[0]))
+        B = list(cursor.fetchall())
+        friendsList = A+B
+        print(friendsList)
+    else:
+        if len(names) == 2:
+            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name = '{0}' and first_name = '{1}'".format(names[0], names[1]))
+            A = cursor.fetchall()
+            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name = '{0}' and last_name = '{1}'".format(names[0], names[1]))
+            B = cursor.fetchall()
+            friendsList= A + B
+        else:
+            friendsList = []
+    usersfriends = listAllFriends()
+    print(usersfriends)
+    return render_template('friends.html',friends=friendsList,userFriends = usersfriends)
+
+@app.route('/addfriends', methods=['GET', 'POST'])
+def addFriend():
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    fid = request.form.get('uid')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(uid,fid))
+    #cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(fid, uid)) this is if we're saying that friendships are mutual by default, not one sided
+    conn.commit()
+    usersfriends = listAllFriends()
+    return render_template('friends.html', userFriends=usersfriends)
 # end photo uploading code
+
 
 #### begin new code
 
 # photo viewing code
+
+
 def delete_file(pid):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM Pictures WHERE picture_id = '{0}'".format(pid))
@@ -266,6 +320,15 @@ def mostPopularTags():
     cursor.execute("SELECT word FROM associated_with GROUP BY word ORDER BY COUNT(word)")
     return cursor.fetchall()
 
+def createATag(word):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Tag (word) VALUES ('{0}')".format(word))
+    conn.commit()
+
+def tagAPhoto(word,pid):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO associated_with (word, picture_id) VALUES ('{0}', '{1}')".format(word, pid))
+
 #album code
 def createAlbum(name,uid):
     cursor = conn.cursor()
@@ -276,21 +339,7 @@ def deleteAlbum(aid):
     cursor.execute("DELETE FROM Album WHERE album_id = '{0}'".format(aid))
     conn.commit()
 
-# friend code
-def userSearchByName(fname,lname):
-    cursor = conn.cursor()
-    cursor.execute("SELECT user_id, first_name, last_name, email FROM Users WHERE first_name = '{0}', last_name = '{1}'".format(fname,lname))
-    return cursor.fetchall()
 
-def addFriend(uid1,uid2):
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(uid1,uid2))
-    conn.commit()
-
-def listFriends(uid):
-    cursor = conn.cursor()
-    cursor.execute("SELECT U.first_name, U.last_name FROM Friends AS F, Users as U WHERE F.user_id1 = '{0}', F.user_id2 = U.user_id".format(uid))
-    return cursor.fetchall()
 
 #### end new code
 
