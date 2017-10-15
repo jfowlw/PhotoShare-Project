@@ -1,0 +1,15 @@
+album.html changes
+- changed action from "add album" to "addAlbum"
+- changed href from 'path to album' to '/viewAlbum?album_id={{album.0}}'
+	and changed {album stuff} to {album.1}} which is the album name
+
+pictures.html changes
+-changed photoList in for loop to photos
+-changed things like photo.image and photo.photo_id to photo.0 and photo.1 to
+	access indexes of photo tuples
+
+something about how the photos are being encoded doesn't seem to be working. the data exists but either isn't all being stored or isnt being encoded correctly. I don't think this problem is on our end because the hello.html page should be displaying the users photos, but has only been displaying the captions
+
+should we have a seperate template for browsing all pictures in all albums, or change our pictures template so that it only shows delete button if you're viewing your own album
+
+for browsing and viewing your albums, should comments be visible or should we have a separate page to view all of a photos comments
