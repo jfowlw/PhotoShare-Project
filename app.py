@@ -194,7 +194,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-
+#### 10-15 updated pictures insert statement format to allow photo_data insertion
 @app.route('/upload', methods=['GET', 'POST'])
 @flask_login.login_required
 def upload_file():
@@ -207,15 +207,68 @@ def upload_file():
         print(str(uid))
         print(str(caption))
         cursor = conn.cursor()
-        #cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption) VALUES ('{0}', '{1}', '{2}' )".format(photo_data, uid, caption))
-        cursor.execute("INSERT INTO Pictures (user_id, caption) VALUES ('{0}', '{1}')".format(uid, caption))
+        cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s)", (photo_data, uid, caption))
         conn.commit()
         return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!',
                                photos=getUsersPhotos(uid))
     # The method is GET so we return a  HTML form to upload the a photo.
     else:
         return render_template('upload.html')
+# end photo uploading code
 
+#### 10-15 created methods for getting albums, adding albums, and viewing pictures in an album
+
+def getUsersAlbums():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("SELECT * FROM Album WHERE user_id = '{0}'".format(uid))
+	return cursor.fetchall()
+#    note: unregistered users shouldnt be allowed to click my albums, it should redirect them to login or register like upload does
+@app.route('/albums')
+def albums():
+    usersalbums = getUsersAlbums()
+    print(str(usersalbums))
+    return render_template('album.html',albumList= usersalbums)
+
+@app.route('/addAlbum', methods=['GET', 'POST'])
+def addAlbum():
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    name = request.form.get('name')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO Album (name, user_id, date_of_creation) VALUES ('{0}','{1}', NOW())".format( name, uid))
+    conn.commit()
+    usersAlbums = getUsersAlbums()
+    return render_template('album.html', albumList = list(usersAlbums))
+
+@app.route('/viewAlbum', methods=['GET', 'POST'])
+def pictures():
+    aid = request.args.get('album_id')
+    print(aid)
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM Album WHERE album_id = '{0}'".format(aid))
+    albumName = cursor.fetchall()
+    cursor.execute("SELECT imgdata, picture_id, album_id, caption FROM Pictures WHERE user_id = '{0}' AND album_id = '{1}'".format(uid,aid))
+    pictures = list(cursor.fetchall())
+    for i in range(len(pictures)):
+        pic = pictures[i]
+        pid = pic[1]
+        data = pic[0]
+        caption = pic[3]
+        aid= pic[2]
+        cursor.execute("SELECT word FROM associated_with WHERE picture_id = '{0}'".format(pid))
+        tags = list(cursor.fetchall())
+        cursor.execute("SELECT U.first_name, U.last_name FROM Users AS U, Likes as L WHERE L.picture_id = '{0}' AND U.user_id = L.user_id".format(pid))
+        likes = list(cursor.fetchall())
+        temp = (data, pid, aid, caption, tags, likes)
+        pictures[i] = temp
+    return render_template('pictures.html', name = albumName , photos = pictures)
+
+
+#end album code
+
+
+#begin friends code
 def listAllFriends():
     cursor = conn.cursor()
     uid = getUserIdFromEmail(flask_login.current_user.id)
@@ -268,11 +321,19 @@ def addFriend():
     conn.commit()
     usersfriends = listAllFriends()
     return render_template('friends.html', userFriends=usersfriends)
-# end photo uploading code
+# end friends code
 
 
-#### begin new code
 
+#### browsing code not yet completed
+@app.route('/browse', methods=['GET', 'POST'])
+def browse():
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    cursor = conn.cursor() # not sure what we want to display on the browsing page, but at some point we'll need all info associated with each photo
+    cursor.execute("SELECT  P.picture_id, P.album_id, P.user_id, P.imgdata, P.caption, A.word, L.user_id "
+                   "FROM Pictures AS P, associated_with AS A, Likes as L, Comments AS C "
+                   "WHERE P.picture_id = A.picture_id AND P.picture_id = L.picture_id AND P.picture_id = C.picture_id")
+    results = cursor.fetchall()
 # photo viewing code
 
 
