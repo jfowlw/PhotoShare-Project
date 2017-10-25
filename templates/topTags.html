@@ -1,0 +1,24 @@
+<html>
+<head>
+    <title>Top 10 Tags</title>
+</head>
+<body>
+    <table>
+        {% if topTags %}
+            <h3>Here is a list of top 10 tags</h3>
+            <tr>
+                <th>Place</th>
+                <th>Tags</th>
+                <th>Count</th>
+            </tr>
+            {% for tag in topTags %}
+                <tr>
+                    <td>{{ trends.place }}</td>
+                    <td>{{ trends.word }}</td>
+                    <td>{{ trends.count }}</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+</body>
+</html>
