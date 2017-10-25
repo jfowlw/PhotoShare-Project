@@ -1,0 +1,30 @@
+<html>
+<head>
+    <title>Browse Pictures by Tag</title>
+</head>
+<body>
+    <form method="post" action="{{ url_for('browse') }}" enctype=multipart/form-data>
+        <p>Enter Tag:</p>
+        <input type="submit" value="Search" />
+    </form>
+    {% if photos %}
+    <h2>Photos</h2>
+        <ul>
+            {% for photo in photoList %}
+                <li><img src='data:image/png;base64, {{photo.image}}'/>
+                    <p>caption : {{ photo.caption }}</p>
+                    <p>tags : {{ photo.tags }}</p>
+                    <p>likes : {{ photo.likes }}</p>
+                </li>
+                <form method="post" action="like" enctype=multipart/form-data>
+                    <input type="submit" value="like"/>
+                    <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
+                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
+                </form>
+
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+</body>
+</html>
