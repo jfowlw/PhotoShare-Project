@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title>Top 10 Users</title>
+</head>
+<body>
+    {% if topUsers %}
+        <p>Top 10 Users</p>
+        {% for name in topUserNames %}
+            <p>{{ name }}</p>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>
