@@ -134,9 +134,9 @@ def register_user():
     try:
         email = request.form.get('email')
         password = request.form.get('password')
-        #first_name = request.form.get('first name')
-        #last_name = request.form.get('last name')
-        #dob = request.form.get('date of birth')
+        first_name = request.form.get('first name')
+        last_name = request.form.get('last name')
+        dob = request.form.get('dob')
     except:
         print(
             "couldn't find all tokens")  # this prints to shell, end users will not see this (all print statements go to shell)
@@ -144,7 +144,7 @@ def register_user():
     cursor = conn.cursor()
     test = isEmailUnique(email)
     if test:
-        print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
+        print(cursor.execute("INSERT INTO Users (email, password,first_name,last_name,dob) VALUES ('{0}', '{1}','{2}','{3}','{4}')".format(email, password,first_name,last_name,dob)))
         #print(cursor.execute("INSERT INTO Users (email, password, first_name, last_name,dob) VALUES ('{0}', '{1}')".format(email, password)))
         conn.commit()
         # log user in
@@ -153,14 +153,14 @@ def register_user():
         flask_login.login_user(user)
         return render_template('hello.html', name=email, message='Account Created!')
     else:
-        print("couldn't find all tokens")
-        return flask.redirect(flask.url_for('register'))
+        print("email already exists")
+        return flask.redirect(flask.url_for('register',supress=False))
 
 
 def getUsersPhotos(uid):
     cursor = conn.cursor()
-    cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
-    return cursor.fetchall()  # NOTE list of tuples, [(imgdata, pid), ...]
+    cursor.execute("SELECT imgpath, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
+    return cursor.fetchall()  # NOTE list of tuples, [(imgpath, pid), ...]
 
 def getUserIdFromEmail(email):
     cursor = conn.cursor()
@@ -187,33 +187,33 @@ def protected():
 
 
 # begin photo uploading code
-# photos uploaded using base64 encoding so they can be directly embedded in HTML
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-#### 10-15 updated pictures insert statement format to allow photo_data insertion
 @app.route('/upload', methods=['GET', 'POST'])
 @flask_login.login_required
 def upload_file():
-    if request.method == 'POST':
-        uid = getUserIdFromEmail(flask_login.current_user.id)
-        imgfile = request.files['photo']
-        caption = request.form.get('caption')
-        photo_data = base64.standard_b64encode(imgfile.read())
-        print(str(photo_data))
-        print(str(uid))
-        print(str(caption))
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s)", (photo_data, uid, caption))
-        conn.commit()
-        return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!',
-                               photos=getUsersPhotos(uid))
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    cursor = conn.cursor()
+    aid = request.args.get('album_id')
+
+    imgfile = request.files['photo']
+    print(str(imgfile))
+    print(imgfile.filename)
+    filename = "static/uploads/"+imgfile.filename
+    print(imgfile.save(filename))
+    caption = request.form.get('caption')
+    photo_path = filename
+
+    cursor.execute("INSERT INTO Pictures (imgpath, user_id, caption, album_id) VALUES (%s, %s, %s, %s)", (photo_path, uid, caption, aid))
+    conn.commit()
     # The method is GET so we return a  HTML form to upload the a photo.
-    else:
-        return render_template('upload.html')
+
+    return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!',
+                           photos=getUsersPhotos(uid))
 # end photo uploading code
 
 #### 10-15 created methods for getting albums, adding albums, and viewing pictures in an album
@@ -223,8 +223,9 @@ def getUsersAlbums():
 	cursor = conn.cursor()
 	cursor.execute("SELECT * FROM Album WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall()
-#    note: unregistered users shouldnt be allowed to click my albums, it should redirect them to login or register like upload does
+
 @app.route('/albums')
+@flask_login.login_required
 def albums():
     usersalbums = getUsersAlbums()
     print(str(usersalbums))
@@ -248,23 +249,64 @@ def pictures():
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM Album WHERE album_id = '{0}'".format(aid))
     albumName = cursor.fetchall()
-    cursor.execute("SELECT imgdata, picture_id, album_id, caption FROM Pictures WHERE user_id = '{0}' AND album_id = '{1}'".format(uid,aid))
-    pictures = list(cursor.fetchall())
+    cursor.execute("SELECT imgpath, picture_id, album_id, caption, user_id FROM Pictures WHERE user_id = '{0}' AND album_id = '{1}'".format(uid,aid))
+    pictures = formatPictureType(list(cursor.fetchall()))
+
+    return render_template('pictures.html', name = albumName , photos = pictures)
+
+def formatPictureType(pictures):
     for i in range(len(pictures)):
         pic = pictures[i]
         pid = pic[1]
-        data = pic[0]
+        path = pic[0]
         caption = pic[3]
-        aid= pic[2]
+        aidi= pic[2]
+        uidi= pic[4]
         cursor.execute("SELECT word FROM associated_with WHERE picture_id = '{0}'".format(pid))
         tags = list(cursor.fetchall())
         cursor.execute("SELECT U.first_name, U.last_name FROM Users AS U, Likes as L WHERE L.picture_id = '{0}' AND U.user_id = L.user_id".format(pid))
         likes = list(cursor.fetchall())
-        temp = (data, pid, aid, caption, tags, likes)
+        temp = (path, pid, aidi, caption, tags, likes,uidi)
         pictures[i] = temp
-    return render_template('pictures.html', name = albumName , photos = pictures)
+    return pictures
+
+@app.route('/like', methods=['GET','POST'])
+def like():
+    pid = request.form.get("photo_id")
+    aid = request.form.get("album_id")
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM Album WHERE album_id = '{0}'".format(aid))
+    albumName = cursor.fetchall()
+    cursor.execute("SELECT * FROM Likes WHERE user_id = '{0}' AND picture_id = '{1}'".format(uid,pid))
+    results = cursor.fetchall()
+    if(len(results)==0): #if this user has not liked this picture already
+        cursor.execute("INSERT INTO Likes (user_id, picture_id) VALUES ('{0}','{1}')".format(uid,pid))
+        conn.commit()
+    cursor.execute(
+        "SELECT imgpath, picture_id, album_id, caption, user_id FROM Pictures WHERE user_id = '{0}' AND album_id = '{1}'".format(
+            uid, aid))
+    pictures = formatPictureType(list(cursor.fetchall()))
+    return render_template('pictures.html', name = albumName , photos = pictures, id = aid)
 
 
+@app.route('/delete', methods=['GET','POST'])
+def delete():
+    pid = request.form.get("photo_id")
+    uid = getUserIdFromEmail(flask_login.current_user.id)
+    puid = request.form.get("user_id")
+    aid = request.form.get("album_id")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM Album WHERE album_id = '{0}'".format(aid))
+    albumName = cursor.fetchall()
+    if int(uid) == int(puid):
+        delete_file(pid)
+    cursor.execute(
+        "SELECT imgpath, picture_id, album_id, caption, user_id FROM Pictures WHERE user_id = '{0}' AND album_id = '{1}'".format(
+            uid, aid))
+    pictures = formatPictureType(list(cursor.fetchall()))
+    return render_template('pictures.html', name=albumName, photos=pictures)
 #end album code
 
 
@@ -283,6 +325,7 @@ def friends():
     usersfriends = listAllFriends()
     print(usersfriends)
     return render_template('friends.html',userFriends= usersfriends)
+#changed query to have name LIKE 'searched name' instead of =
 @app.route('/findfriends', methods=['GET', 'POST'])
 def searchFriends():
     uid = getUserIdFromEmail(flask_login.current_user.id)
@@ -292,17 +335,18 @@ def searchFriends():
     print(str(names))
     cursor = conn.cursor()
     if len(names) == 1:
-        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name = '{0}'".format(names[0]))
+        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name LIKE '{0}'".format(names[0]))
         A = list(cursor.fetchall())
-        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name = '{0}'".format(names[0]))
+        print(A)
+        cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name LIKE '{0}'".format(names[0]))
         B = list(cursor.fetchall())
         friendsList = A+B
         print(friendsList)
     else:
         if len(names) == 2:
-            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name = '{0}' and first_name = '{1}'".format(names[0], names[1]))
+            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE last_name LIKE '{0}' and first_name LIKE '{1}'".format(names[0], names[1]))
             A = cursor.fetchall()
-            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name = '{0}' and last_name = '{1}'".format(names[0], names[1]))
+            cursor.execute("SELECT first_name,last_name, email, user_id FROM Users WHERE first_name LIKE '{0}' and last_name LIKE '{1}'".format(names[0], names[1]))
             B = cursor.fetchall()
             friendsList= A + B
         else:
@@ -316,12 +360,26 @@ def addFriend():
     uid = getUserIdFromEmail(flask_login.current_user.id)
     fid = request.form.get('uid')
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(uid,fid))
+    cursor.execute("SELECT * FROM Friends WHERE user_id1 = '{0}' AND user_id2 = '{1}'".format(uid,fid))
+    results = cursor.fetchall()
+    if (len(results)==0): #if this friendship does not already exist
+        cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(uid,fid))
     #cursor.execute("INSERT INTO Friends (user_id1, user_id2, since) VALUES ('{0}','{1}',NOW())".format(fid, uid)) this is if we're saying that friendships are mutual by default, not one sided
     conn.commit()
     usersfriends = listAllFriends()
     return render_template('friends.html', userFriends=usersfriends)
 # end friends code
+
+@app.route('/topUsers', methods=['GET', 'POST'])
+def topTenUsers():
+    cursor = conn.cursor()
+    cursor.execute("select U.first_name, U.last_name from users as U, Pictures as P, Comment as C WHERE P.user_id = U.user_id "
+                   "AND U.user_id = C.comment_id group by u.user_id order by count(p.picture_id)")
+    users = list(cursor.fetchall())
+    print(len(users))
+    names = [str(first)+' '+str(last) for (first,last) in users]
+    print(len(names))
+    return render_template('topUsers.html',topUsers = names)
 
 
 
@@ -330,8 +388,8 @@ def addFriend():
 def browse():
     uid = getUserIdFromEmail(flask_login.current_user.id)
     cursor = conn.cursor() # not sure what we want to display on the browsing page, but at some point we'll need all info associated with each photo
-    cursor.execute("SELECT  P.picture_id, P.album_id, P.user_id, P.imgdata, P.caption, A.word, L.user_id "
-                   "FROM Pictures AS P, associated_with AS A, Likes as L, Comments AS C "
+    cursor.execute("SELECT  P.picture_id, P.album_id, P.user_id, P.imgpath, P.caption, A.word, L.user_id "
+                   "FROM Pictures AS P, associated_with AS A, Likes as L, Comment AS C "
                    "WHERE P.picture_id = A.picture_id AND P.picture_id = L.picture_id AND P.picture_id = C.picture_id")
     results = cursor.fetchall()
 # photo viewing code
@@ -344,17 +402,17 @@ def delete_file(pid):
 
 def getAllPhotos():
     cursor = conn.cursor()
-    cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
+    cursor.execute("SELECT imgpath, picture_id, caption FROM Pictures")
     return cursor.fetchall()
 
 def getAllPhotosByTag(tagword):
     cursor = conn.cursor()
-    cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(tagword))
+    cursor.execute("SELECT P.imgpath, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(tagword))
     return cursor.fetchall()
 
 def getUsersPhotosByTag(tagword, uid):
     cursor = conn.cursor()
-    cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', P.user_id = '{1}' ,A.picture_id = P.picture_id".format(tagword,uid))
+    cursor.execute("SELECT P.imgpath, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', P.user_id = '{1}' ,A.picture_id = P.picture_id".format(tagword,uid))
     return cursor.fetchall()
 
 def photoSearch(searchString):
@@ -363,7 +421,7 @@ def photoSearch(searchString):
     finalOutput = []
     for word in words:
         cursor = conn.cursor()
-        cursor.execute("SELECT P.imgdata, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(word))
+        cursor.execute("SELECT P.imgpath, P.picture_id, P.caption FROM Pictures AS P, associated_with AS a WHERE A.word = '{0}', A.picture_id = P.picture_id".format(word))
         results+=[list(cursor.fetchall())]
     for photo in results[0]:
         if inAllLists(photo,results):
@@ -378,17 +436,38 @@ def inAllLists(element,lists):
 
 def mostPopularTags():
     cursor = conn.cursor()
-    cursor.execute("SELECT word FROM associated_with GROUP BY word ORDER BY COUNT(word)")
+    cursor.execute("SELECT word, COUNT(picture_id) FROM associated_with GROUP BY word ORDER BY COUNT(picture_id) LIMIT 10")
     return cursor.fetchall()
 
-def createATag(word):
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO Tag (word) VALUES ('{0}')".format(word))
-    conn.commit()
 
 def tagAPhoto(word,pid):
     cursor = conn.cursor()
+    cursor.execute("SELECT word FROM Comment WHERE word = '{0}'".format(word))
+    results = cursor.fetchall()
+    if len(results)==0:
+        cursor.execute("INSERT INTO Tag (word) VALUES ('{0}')".format(word))
+        conn.commit()
     cursor.execute("INSERT INTO associated_with (word, picture_id) VALUES ('{0}', '{1}')".format(word, pid))
+    conn.commit()
+
+
+#comment code
+def createComment(comment,uid,pid):
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO Comment (date_left, text, user_id, picture_id) VALUES (NOW(), '{0}','{1}','{2}')".format(comment, uid, pid))
+    conn.commit()
+
+def searchOnComments(searchString):
+    cursor = conn.cursor()
+    cursor.execute("SELECT U.first_name, U.last_name, U.user_id FROM Comment AS C, Users AS U WHERE C.text LIKE '%{0}%' "
+                   "AND C.user_id = U.user_id GROUP BY C.user_id ORDER BY COUNT(C.comment_id)".format(searchString))
+    results = list(cursor.fetchall())
+    return results
+
+
+
+
 
 #album code
 def createAlbum(name,uid):
