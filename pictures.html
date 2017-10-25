@@ -7,7 +7,7 @@
     <h2>Photos in {{ name }}</h2>
         <ul>
             {% for photo in photos %}
-                <li><img src='data:image/png;base64, {{photo.0}}'/>
+                <li><img src= {{photo.0}}/>
                     <p>Caption : {{ photo.3 }}</p>
                     <p>Tags : {{ photo.4}}</p>
                     <p>Likes : {{ photo.5 }}</p>
@@ -16,11 +16,13 @@
                     <input type="submit" value="like"/>
                     <input type="hidden" name="photo_id" value="{{ photo.1}}"/>
                     <input type="hidden" name="album_id" value="{{ photo.2 }}"/>
+                    <input type="hidden" name="user_id" value="{{ photo.6 }}"/>
                 </form>
                 <form method="post" action="delete">
                     <input type="submit" value="delete"/>
                     <input type="hidden" name="photo_id" value="{{ photo.1 }}"/>
                     <input type="hidden" name="album_id" value="{{ photo.2 }}"/>
+                    <input type="hidden" name="user_id" value="{{ photo.6 }}"/>
                 </form>
             {% endfor %}
         </ul>
