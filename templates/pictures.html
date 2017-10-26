@@ -13,18 +13,22 @@
                     <p>Likes : {{ photo.likes }}</p>
                 </li>
                 <form method="post" action="like">
-                    <input type="submit" value="like"/>
+                    <input type="submit" value="Like Photo"/>
                     <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
                     <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
                 </form>
                 <form method="post" action="delete">
-                    <input type="submit" value="delete"/>
+                    <input type="submit" value="Delete Photo"/>
                     <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
                     <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
                 </form>
             {% endfor %}
         </ul>
     {% endif %}
+    <form method="post" action="delete_album">
+                    <input type="submit" value="Delete Album"/>
+                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
+    </form>
     <form method="post" enctype="multipart/form-data" action="/upload">
                 <label for="photo">Select photo:</label>
                 <input type="file" name="photo" required='true' /><br />
