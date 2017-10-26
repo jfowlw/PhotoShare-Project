@@ -1,0 +1,59 @@
+<head>
+    <title>Comments</title>
+</head>
+<body>
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
+    {% if(picture) %}
+        <img src='data:image/png;base64, {{picture}}'/>
+            <form method="post" action="comment" enctype=multipart/form-data>
+                <label for="comment"></label>
+                <input type="text" name="comment"/>
+                <input type="submit" value="comment" />
+                <input type="hidden" name="user_id" value="{{ user.user_id }}" />
+                <input type="hidden" name="picture_id" value="{{ photo.photo_id }}" />
+            </form>
+        <li>
+            {% if(comments) %}
+                {% for com in comments %}
+                    <ul>{{ comment.first_name }} {{ comment.last_name }} : {{ com.comment }}</ul>
+                {% endfor %}
+            {% endif %}
+        </li>
+    {% endif %}
+</body>
+</html>
+
+@app.route('/comment', methods=['GET','POST'])
+def comment():
+    user_comments=[]
+    picture_id=request.form.get('photo_id')
+    comment = request.form.get('comment_id')
+    cursor=conn.cursor()
+    cursor.execute("SELECT user_id FROM photos WHERE picture_id='{0}'".format(photo_id))
+    for pic_temp in cursor.fetchall():
+        pic = pic_temp[0]
+        pic_user = pic_temp[1]
+    try:
+        uid = getUserIdFromEmail(flask_login.current_user.id)
+        cursor.execute("SELECT first_name FROM users WHERE user_id='{0}'".format(uid))
+	cursor.execute("SELECT last_name FROM users WHERE user_id='{0}'".format(uid))
+    except:
+        uid = 0
+    if(uid == 0 or pic_user!=uid):
+        cursor.execute("INSERT INTO comments(user_id,text,picture_id) VALUE('{0}','{1}','{2}')".format(uid,text,picture_id))
+        conn.commit()
+        message = ""
+    else:
+        message = "You Cannot Post a Comment on Your Own Picture"
+
+    #Needs Correct Query for First and Last Name
+	cursor.execute("SELECT text,first_name,last_name FROM comments WHERE picture_id='{0}'".format(picture_id))
+    comment_row = cursor.fetchall()
+    for c_row in comment_row:
+        temp_comment = comments(c_row[0],c_row[1])
+        user_comments.append(temp_comment)
+
+    #Not sure how the return template works
+    return render_template('comment.html',)
