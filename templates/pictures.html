@@ -28,8 +28,10 @@
     <form method="post" enctype="multipart/form-data" action="/upload">
                 <label for="photo">Select photo:</label>
                 <input type="file" name="photo" required='true' /><br />
-                <label for="caption">Please caption:</label>
+                <label for="caption">Caption:</label>
                 <input type="text" name="caption" required='true' /><br />
+                <label for="tag">Tags:</label>
+                <input type="text" name="tag" required='false' /><br />
                 <input type="hidden" name="album_id" value="{{ album_id }}"/>
                 <input type="submit" value="Upload" />
     </form>
