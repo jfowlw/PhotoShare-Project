@@ -1,0 +1,27 @@
+<head>
+    <title>Recommended Friends</title>
+</head>
+<body>   
+    <table style="width:80%">
+        {% if recFriends %}
+            {%for recFriend in recFriends %}
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>E-Mail</th>
+                </tr>
+                <tr>
+                    <td>{{ recFriend.0 }}</td>
+                    <td>{{ recFriend.1 }}</td>
+                    <td>{{ recFriend.2 }}</td>
+                    <form method="post" action="{{ url_for('addFriend') }}">
+                        <td><input type="submit" value="Add"/></td>
+                        <input type="hidden" name="uid" value="{{ recFriend.3 }}"/>
+                    </form>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+</body>
+<li><a href='/'>Home</a></li>
+</html>
