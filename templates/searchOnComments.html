@@ -1,25 +1,31 @@
 <html>
 <head>
-    <title>Browse Comments</title>
+    <title>Search Comments</title>
 </head>
 <body>
+<li><a href='/'>Home</a></li>
     <form method="post" action="searchOnComments" enctype=multipart/form-data>
         <p>Enter Comment:</p>
+        <input type="text" name="searchText"/><br/>
         <input type="submit" value="Search" />
     </form>
-    {% if comments %}
-    <h2>Comments</h2>
-            <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Number of Matching Comments</th>
-            </tr>
-            {% for comment in comments %}
+    <table style="width:35%">
+        {% if commentors %}
+        <h2>Comments</h2>
                 <tr>
-                    <td>{{ comment.first_name }}</td>
-                    <td>{{ comment.last_name }}</td>
-                    <td>{{ comment.numComments }}</td>
-                </tr>
-    {% endif %}
+                    <th align="left">First Name</th>
+                    <th align="left">Last Name</th>
+                    <th align="left">Number of Matching Comments</th>
+                </tr></br>
+                {% for commentor in commentors %}
+                    <tr>
+                        <td align="left">{{ commentor.0 }}</td>
+                        <td align="left">{{ commentor.1 }}</td>
+                        <td align="center">{{ commentor.2 }}</td>
+                    </tr>
+                    </br>
+                {% endfor %}
+        {% endif %}
+    </table>
 </body>
 </html>

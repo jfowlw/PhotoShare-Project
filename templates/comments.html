@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>Comments</title>
+</head>
+<body>
+<li><a href='/'>Home</a></li>
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
+    {% if(picture) %}
+        <img style="max-height:750px;max-width:100%;height:auto;width:auto;" src={{picture.0}}/>
+        <li><a href='/findfriends/{{ picture.3 }}'>Uploaded by: {{ picture.3}}</a></li>
+            <form method="post" action="/postComment" enctype=multipart/form-data>
+                <input type="text" name="comment"/>
+                <input type="submit" value="comment" />
+                <input type="hidden" name="user_id" value="{{ user_id }}" />
+                <input type="hidden" name="picture_id" value="{{ picture_id }}" />
+                <input type="hidden" name="current_url" value="{{ request.url }}"/>
+            </form>
+        <li>
+            {% if(comments) %}
+                {% for com in comments %}
+                    <ul>{{ com.1}} {{ com.2 }} : {{ com.0 }}</ul>
+                {% endfor %}
+            {% endif %}
+        </li>
+    {% endif %}
+</body>
+</html>

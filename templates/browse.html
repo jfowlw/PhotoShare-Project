@@ -2,26 +2,42 @@
 <head>
     <title>Browse Pictures by Tag</title>
 </head>
-<body>
+<br>
+<li><a href='/'>Home</a></li>
     <form method="post" action="{{ url_for('browse') }}" enctype=multipart/form-data>
         <p>Enter Tag:</p>
+        <input type="text" name="searchText"/><br/>
+        <input type="radio" name="users" value="you"> Your Photos<br>
+        <input type="radio" name="users" value="all"> All Photos<br>
         <input type="submit" value="Search" />
     </form>
     {% if photos %}
     <h2>Photos</h2>
-        <ul>
-            {% for photo in photoList %}
-                <li><img src='data:image/png;base64, {{photo.image}}'/>
-                    <p>caption : {{ photo.caption }}</p>
-                    <p>tags : {{ photo.tags }}</p>
-                    <p>likes : {{ photo.likes }}</p>
-                </li>
-                <form method="post" action="like" enctype=multipart/form-data>
-                    <input type="submit" value="like"/>
-                    <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
-                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
-                </form>
+        <br>
+            {% for photo in photos %}
 
+                <li><img src= "/{{photo.0}}" style="max-height:400px;max-width:400px;height:auto;width:auto;">
+                <li><a href='/findfriends/{{ photo.7 }}'>Uploaded by: {{ photo.7}}</a></li>
+                <li><a href='/viewAlbum?album_id={{ photo.2 }}'> View Album </a></li>
+                <li><a href='/comment?photo_id={{ photo.1 }}'> Comments </a></li>
+                    <p>Caption : {{ photo.3 }}</p>
+                    <th>Tags: </th>
+                    {% for tag in photo.4 %}
+                        <a href='/browse?TAG={{ tag }}'>#{{ tag}}</a>
+                    {% endfor %}<br></br>
+                    <th>Likes: </th>
+                    {% for like in photo.5 %}
+                        <a href='/findfriends/{{ like }}'>{{ like}}</a>
+                    {% endfor %}
+                </li>
+
+                <form method="post" action="/like" enctype=multipart/form-data>
+                    <input type="submit" value="like"/>
+                    <input type="hidden" name="photo_id" value="{{ photo.1 }}"/>
+                    <input type="hidden" name="album_id" value="{{ photo.2 }}"/>
+                    <input type="hidden" name="user_id" value="{{ photo.6 }}"/>
+                    <input type="hidden" name="current_url" value="{{ request.url }}"/>
+                </form>
             {% endfor %}
         </ul>
     {% endif %}

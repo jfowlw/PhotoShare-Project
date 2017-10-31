@@ -3,6 +3,7 @@
     <title>Top 10 Tags</title>
 </head>
 <body>
+<li><a href='/'>Home</a></li>
     <table>
         {% if topTags %}
             <h3>Here is a list of top 10 tags</h3>
@@ -13,9 +14,9 @@
             </tr>
             {% for tag in topTags %}
                 <tr>
-                    <td>{{ trends.place }}</td>
-                    <td><li><a href='path to pictures with tag'>{{ trends.word }}</a></li></td>
-                    <td>{{ trends.count }}</td>
+                    <td>{{ tag.0 }}</td>
+                    <td><li><a href='/browse?TAG={{ tag.1 }}'>{{ tag.1}}</a></li></td>
+                    <td>{{ tag.2 }}</td>
                 </tr>
             {% endfor %}
         {% endif %}

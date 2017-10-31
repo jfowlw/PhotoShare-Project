@@ -3,22 +3,32 @@
     <title>Pictures You May Also Like</title>
 </head>
 <body>
+<li><a href='/'>Home</a></li>
     {% if photos %}
         <ul>
-            {% for photo in photoList %}
-                <li><img src='data:image/png;base64, {{photo.image}}'/>
-                    <p>Caption : {{ photo.caption }}</p>
-                    <p>Tags : {{ photo.tags }}</p>
-                    <p>Likes : {{ photo.likes }}</p>
+            {% for photo in photos %}
+                <li><img style="max-height:400px;max-width:400px;height:auto;width:auto;" src={{ photo.0 }}/>
+                <li><a href='/findfriends/{{ photo.7 }}'>Uploaded by: {{ photo.7}}</a></li>
+                <li><a href='/viewAlbum?album_id={{ photo.2 }}'> View Album </a></li>
+                <li><a href='/comment?photo_id={{ photo.1 }}'> Comments </a></li>
+                    <p>Caption : {{ photo.3 }}</p>
+                    <th>Tags: </th>
+                    {% for tag in photo.4 %}
+                        <a href='/browse?TAG={{ tag }}'>{{ tag}}</a>
+                    {% endfor %}<br></br>
+                    <th>Likes: </th>
+                    {% for like in photo.5 %}
+                        <a href='/findfriends/{{ like }}'>{{ like}}</a>
+                    {% endfor %}
                 </li>
-                <form method="post" action="like">
+                <form method="post" action="/like">
                     <input type="submit" value="Like Photo"/>
-                    <input type="hidden" name="photo_id" value="{{ photo.photo_id }}"/>
-                    <input type="hidden" name="album_id" value="{{ photo.album_id }}"/>
+                    <input type="hidden" name="photo_id" value="{{ photo.1 }}"/>
+                    <input type="hidden" name="album_id" value="{{ photo.2 }}"/>
+                    <input type="hidden" name="current_url" value="{{ request.url }}"/>
                 </form>
             {% endfor %}
         </ul>
     {% endif %}
 </body>
-<li><a href='/'>Home</a></li>
 </html>

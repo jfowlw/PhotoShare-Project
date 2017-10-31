@@ -3,10 +3,11 @@
     <title>Top 10 Users</title>
 </head>
 <body>
+<li><a href='/'>Home</a></li>
     {% if topUsers %}
-        <p>Top 10 Users</p>
-        {% for name in topUserNames %}
-            <p>{{ name }}</p>
+        <h2>Top 10 Users</h2>
+        {% for name in topUsers %}
+            <a href='/findfriends/{{ name }}'>{{ name}}</a><br><br>
         {% endfor %}
     {% endif %}
 </body>

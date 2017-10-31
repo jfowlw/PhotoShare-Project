@@ -1,7 +1,11 @@
 <head>
     <title>Recommended Friends</title>
 </head>
-<body>   
+<body>
+<li><a href='/'>Home</a></li>
+    {% if message %}
+        <h2>{{ message }}</h2>
+    {% endif %}
     <table style="width:80%">
         {% if recFriends %}
             {%for recFriend in recFriends %}
@@ -23,5 +27,4 @@
         {% endif %}
     </table>
 </body>
-<li><a href='/'>Home</a></li>
 </html>

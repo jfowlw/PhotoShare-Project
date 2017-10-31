@@ -1,43 +1,44 @@
 <head>
     <title>Friends!</title>
 </head>
-<body>   
-    <table style="width:80%">
+<body>
+<li><a href='/'>Home</a></li>
+    <table style="width:30%">
         {% if userFriends %}
             <h3>Friend List:</h3>
             <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
+                <th align="left">First Name</th>
+                <th align="left">Last Name</th>
             </tr>
             {% for friend in userFriends %}
                 <tr>
-                    <td>{{ friend.0 }}</td>
-                    <td>{{ friend.1 }}</td>
+                    <td align="left">{{ friend.0 }}</td>
+                    <td align="left">{{ friend.1 }}</td>
                 </tr>
             {% endfor %}
         {% endif %}
     </table>
-    
+
     <li><a href='/recommendFriends'>Recommended Friends</a></li>
     
-    <form method="post" action="{{ url_for('searchFriends') }}">
+    <form method="post" action="{{ url_for('friends') }}">
         <label for="name">Name: </label>
         <input type="text" name="name"/><br/>
         <input type="submit" value="Search"/>
     </form>
     
-    <table style="width:80%">
+    <table style="width:30%">
         {% if friends %}
             {%for friend in friends %}
                 <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>E-Mail</th>
+                    <th align="left">First Name</th>
+                    <th align="left">Last Name</th>
+                    <th align="left">E-Mail</th>
                 </tr>
                 <tr>
-                    <td>{{ friend.0 }}</td>
-                    <td>{{ friend.1 }}</td>
-                    <td>{{ friend.2 }}</td>
+                    <td align="left">{{ friend.0 }}</td>
+                    <td align="left">{{ friend.1 }}</td>
+                    <td align="left">{{ friend.2 }}</td>
                     <form method="post" action="{{ url_for('addFriend') }}">
                         <td><input type="submit" value="Add"/></td>
                         <input type="hidden" name="uid" value="{{ friend.3 }}"/>
@@ -47,5 +48,4 @@
         {% endif %}
     </table>
 </body>
-<li><a href='/'>Home</a></li>
 </html>
