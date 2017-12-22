@@ -3,16 +3,16 @@
     <title>Albums</title>
 </head>
 <body>
-    <form method="post" action="add album">
+    <form method="post" action="addAlbum">
         <label>Add Album</label></br>
         <label for="name">Album Name: </label>
         <input type="text" name="name">
         <input type="submit" value="New Album">
     </form>
-    {% if album %}
+    {% if albumList %}
     <h2>Albums:</h2>
         {% for album in albumList %}
-            <li><a href='path to album'>{album stuff}</a></li>
+            <li><a href='/viewAlbum?album_id={{ album.0 }}'> {{album.1}}</a></li>
         {% endfor %}
     {% endif %}
 </body>
