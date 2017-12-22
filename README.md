@@ -1,9 +1,9 @@
-#PhotoShare: An online photo social network system
-###CS460/660 Project Assignment 1
+# PhotoShare: An online photo social network system
+### CS460/660 Project Assignment 1
 
 In this project, you will design, implement and document a database system for a web based photo social sharing application. You need also to provide the web based interface to the database. The final system should be functional and will be similar to Flickr!
 
-####The system should manage the following information:
+#### The system should manage the following information:
 **Users**
 Each user is identified by a unique user id and has the following attributes: first name, last name, email, date of birth, hometown, gender, and password. A user can have a number of Albums.
 **Friends**
@@ -17,19 +17,19 @@ Each tag is described by a single word. Many photos can be tagged with the same 
 **Comments** 
 Each comment is identified by a unique comment id and has the following attributes: text (i.e., the actual comment), the comment's owner (a user) and the date the comment was left. 
 
-####The following interaction with the system should be implemented. 
-#####**User management**
+#### The following interaction with the system should be implemented. 
+##### **User management**
 **Becoming a registered user**
 Before being able to upload photos a user should register by providing their first name, last name, email address, date of birth, and a password. If the user already exists in the database with the same email address an error message should be produced. The other additional information about each user is optional.
 **Adding and Listing Friends**
 You should allow a user to add a new friend on the friend list. For simplicity, you do not have to verify the friendship relationship. Also, you should allow the user to search for other users in the system (in order to find friends to add.) Finally, you must allow a user to list his/her friends.
-#####**User activity**
+##### **User activity**
 To motivate users in using the site we'd like to identify the ones who make the largest contribution and list them on the site. We'll measure the contribution of a user as the number of photos they have uploaded plus the number of comments they have left for photos belonging to other users. The top 10 users should be reported. 
 **Photo and album browsing**
 Every visitor to the site, registered or not, should be allowed to browse photos. In this project we will assume that all photos and albums are made public by their authors. 
 **Photo and album creating**
 After registration, users can start creating albums and uploading photos. The relevant fields are described above. Users should also be able to delete both albums and photos. If an non-empty album is deleted its photos should also be purged. Users should only be allowed to modify and delete albums and photos which they own. 
-#####**Tag management**
+##### **Tag management**
 **Viewing your photos by tag name**
 Tags provide a way to categorize photos and each photo can have any number of tags. You may think of them as virtual albums. For example, suppose that a user has two distinct albums each of which contains a photo with the tag 'friends'. The means should be provided to view the virtual album created if we select all the photos owned by the user that contain the tag 'friends'. One possible user interface design for this functionality is to present tags as hyperlinks. When a tag is clicked the photos tagged with it are listed. 
 **Viewing all photos by tag name**
