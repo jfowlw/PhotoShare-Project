@@ -1,7 +1,7 @@
 # PhotoShare: An online photo social network system
 ### CS460/660 Project Assignment 1
 
-In this project, you will design, implement and document a database system for a web based photo social sharing application. You need also to provide the web based interface to the database. The final system should be functional and will be similar to Flickr!
+Implementation of a database system for a simple web based photo social sharing application.
 
 ### Features
 #### Users
