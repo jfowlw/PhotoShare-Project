@@ -1,5 +1,4 @@
 # PhotoShare: An online photo social network system
-### CS460/660 Project Assignment 1
 
 Implementation of a database system for a simple web based photo social sharing application.
 
